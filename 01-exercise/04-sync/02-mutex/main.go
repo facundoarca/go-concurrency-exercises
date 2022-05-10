@@ -12,7 +12,7 @@ func main() {
 
 	var balance int
 	var wg sync.WaitGroup
-	var mu sync.Mutex
+	var mu sync.RWMutex
 
 	deposit := func(amount int) {
 		mu.Lock()
@@ -20,12 +20,25 @@ func main() {
 		mu.Unlock()
 	}
 
-	wg.Add(10)
+	checkBalance := func() int {
+		mu.RLock()
+		defer mu.RUnlock()
+		return balance
+	}
+
+	wg.Add(30)
 	for i := 0; i < 10; i++ {
 		go func() {
 			defer wg.Done()
+			fmt.Println("Increasing balance by $1")
 			deposit(1)
 		}()
+	}
+	for i := 0; i < 20; i++ {
+		go func(i int) {
+			defer wg.Done()
+			fmt.Println("(", i, ") Value read: ", checkBalance())
+		}(i)
 	}
 
 	//TODO: implement concurrent read.

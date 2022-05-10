@@ -12,12 +12,17 @@ func main() {
 
 	var balance int
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 
 	deposit := func(amount int) {
+		mu.Lock()
+		defer mu.Unlock()
 		balance += amount
 	}
 
 	withdrawal := func(amount int) {
+		mu.Lock()
+		defer mu.Unlock()
 		balance -= amount
 	}
 
