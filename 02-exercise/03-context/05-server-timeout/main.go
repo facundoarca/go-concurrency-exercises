@@ -1,20 +1,15 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
-
-	_ "github.com/lib/pq"
 )
 
-var db *sql.DB
-
 func slowQuery() error {
-	_, err := db.Exec("SELECT pg_sleep(5)")
-	return err
+	time.Sleep(5 * time.Second)
+	return nil
 }
 
 func slowHandler(w http.ResponseWriter, req *http.Request) {
@@ -29,7 +24,7 @@ func slowHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	var err error
+	/*var err error
 
 	connstr := "host=localhost port=5432 user=alice password=pa$$word  dbname=wonderland sslmode=disable"
 
@@ -40,12 +35,12 @@ func main() {
 
 	if err = db.Ping(); err != nil {
 		log.Fatal(err)
-	}
+	}*/
 
 	srv := http.Server{
 		Addr:         "localhost:8000",
 		WriteTimeout: 2 * time.Second,
-		Handler:      http.HandlerFunc(slowHandler),
+		Handler:      http.TimeoutHandler(http.HandlerFunc(slowHandler), 1*time.Second, "timeout"),
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
